@@ -70,3 +70,38 @@ src/
 - 入口：`src/api/client.ts`。
 - 关闭 mock：将 `.env.production` 或 `.env.development` 中 `VITE_USE_MOCK=false`。
 - 保持 `src/types` 不变，替换 `src/api/endpoints.ts` 的请求参数映射即可。
+
+
+## 宽体自卸车选配 Demo（矿卡）模型说明
+
+选配页的 3D 查看器会加载以下模型路径：
+
+- `public/assets/models/dump_truck.glb`
+
+### 默认下载脚本
+
+仓库提供 `scripts/download-assets.mjs`，可在网络可达时下载默认 GLB 到指定路径：
+
+```bash
+node scripts/download-assets.mjs
+```
+
+你也可以用环境变量改为你自己的模型地址：
+
+```bash
+DUMP_TRUCK_MODEL_URL="https://your-host/dump-truck.glb" node scripts/download-assets.mjs
+```
+
+### 模型来源与许可（当前默认）
+
+- **来源**：Khronos glTF Sample Models - CesiumMilkTruck
+  - https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/CesiumMilkTruck
+- **许可**：遵循该仓库与模型页面声明（示例资源通常为开放演示用途，请在商用前再次核验）
+
+### 替换为更真实矿卡模型
+
+建议替换为你们业务侧确认可用的 **非公路矿用宽体自卸车** GLB/GLTF，并保持文件名：
+
+- `public/assets/models/dump_truck.glb`
+
+替换后无需改代码，选配器会自动加载新模型，并使用包围盒推断挂点（可加 `?debugAnchors=1` 查看锚点调试球与坐标轴）。
