@@ -148,6 +148,7 @@ let controls: OrbitControls | null = null;
 let frameId = 0;
 let resizeObserver: ResizeObserver | null = null;
 let overlayLayer: THREE.Group | null = null;
+let floorMesh: THREE.Mesh | null = null;
 let anchors: AnchorsMap | null = null;
 const activeRigMap = new Map<OverlayType, OverlayRig[]>();
 
@@ -268,9 +269,13 @@ const init3D = () => {
   key.position.set(8, 12, 4);
   scene.add(key);
 
-  const floor = new THREE.Mesh(new THREE.CircleGeometry(9, 64), new THREE.MeshStandardMaterial({ color: '#132238', roughness: 0.3, metalness: 0.2 }));
-  floor.rotation.x = -Math.PI / 2;
-  scene.add(floor);
+  floorMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(32, 32),
+    new THREE.MeshStandardMaterial({ color: '#132238', roughness: 0.36, metalness: 0.18, transparent: true, opacity: 0.75 })
+  );
+  floorMesh.rotation.x = -Math.PI / 2;
+  floorMesh.position.y = -0.2;
+  scene.add(floorMesh);
 
   overlayLayer = new THREE.Group();
   scene.add(overlayLayer);
@@ -286,6 +291,11 @@ const init3D = () => {
       const size = box.getSize(new THREE.Vector3());
       model.scale.setScalar(6.2 / Math.max(size.x, size.y, size.z));
       scene?.add(model);
+
+      const fittedBox = new THREE.Box3().setFromObject(model);
+      const modelMinY = fittedBox.min.y;
+      if (floorMesh) floorMesh.position.y = modelMinY + 0.02;
+
       anchors = inferAnchors(model);
       if (debugAnchors) createAnchorDebugObjects(anchors).forEach((obj) => overlayLayer?.add(obj));
       loading.value = false;
