@@ -251,7 +251,7 @@ const init3D = () => {
   scene = new THREE.Scene();
   scene.background = new THREE.Color('#060c18');
   camera = new THREE.PerspectiveCamera(48, 1, 0.1, 200);
-  camera.position.set(6, 3, 6);
+  camera.position.set(4.6, 2.4, 4.6);
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
@@ -259,7 +259,9 @@ const init3D = () => {
 
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.target.set(0, 1.2, 0);
+  controls.target.set(0, 0.85, 0);
+  controls.minDistance = 2.4;
+  controls.maxDistance = 10;
 
   scene.add(new THREE.HemisphereLight('#8fb8ff', '#263142', 1.1));
   const key = new THREE.DirectionalLight('#d8ebff', 1.2);
@@ -282,7 +284,7 @@ const init3D = () => {
       const center = box.getCenter(new THREE.Vector3());
       model.position.sub(center);
       const size = box.getSize(new THREE.Vector3());
-      model.scale.setScalar(4 / Math.max(size.x, size.y, size.z));
+      model.scale.setScalar(6.2 / Math.max(size.x, size.y, size.z));
       scene?.add(model);
       anchors = inferAnchors(model);
       if (debugAnchors) createAnchorDebugObjects(anchors).forEach((obj) => overlayLayer?.add(obj));
@@ -334,10 +336,10 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.viewer-shell { position: relative; height: 100%; min-height: 520px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(95,155,255,.35); background: radial-gradient(circle at 20% 18%, rgba(62,135,255,.22), rgba(5,11,24,.96)); }
+.viewer-shell { position: relative; height: 100%; min-height: 620px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(95,155,255,.35); background: radial-gradient(circle at 20% 18%, rgba(62,135,255,.22), rgba(5,11,24,.96)); }
 .canvas-host,.frames-host { width: 100%; height: 100%; }
 .frames-host { position: relative; cursor: ew-resize; user-select: none; }
-.frame-image { width: 100%; height: 100%; object-fit: cover; }
+.frame-image { width: 100%; height: 100%; object-fit: contain; }
 .overlay { position: absolute; left: 12px; right: 12px; padding: 8px 10px; border-radius: 10px; font-size: 13px; }
 .overlay.loading { bottom: 44px; background: rgba(32,73,135,.7); }
 .overlay.error { bottom: 44px; background: rgba(153,39,39,.8); }

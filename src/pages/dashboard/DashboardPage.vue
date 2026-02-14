@@ -231,7 +231,7 @@ const jumpToEvents = () => {
   flex-direction: column;
   gap: 14px;
   padding: 8px 2px;
-  min-height: calc(100vh - 180px);
+  height: calc(100vh - 136px); min-height: 700px;
 }
 
 .hero {
@@ -273,7 +273,7 @@ const jumpToEvents = () => {
 
 .viewer-fill {
   flex: 1;
-  min-height: 0;
+  min-height: 560px;
 }
 
 .step-selected-inline {
