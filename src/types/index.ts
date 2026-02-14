@@ -80,3 +80,61 @@ export interface PagedEvents {
   page: number;
   pageSize: number;
 }
+
+export type SnapshotStatus = 'ready' | 'expired' | 'processing';
+
+export interface SnapshotFilters {
+  start?: string;
+  end?: string;
+  siteIds?: string[];
+  versionIds?: string[];
+  env?: EnvType | '';
+  severity?: Severity | '';
+  ruleId?: string;
+  q?: string;
+}
+
+export interface SnapshotSummary {
+  eventCount: number;
+  anomalyScore: number;
+  topRules: Array<{ ruleName: string; count: number }>;
+  trend?: Array<{ date: string; value: number }>;
+}
+
+export interface SnapshotRecord {
+  id: string;
+  name: string;
+  createdAt: string;
+  createdBy: string;
+  timeRangeStart: string;
+  timeRangeEnd: string;
+  filters: SnapshotFilters;
+  summary: SnapshotSummary;
+  status: SnapshotStatus;
+}
+
+export interface SnapshotListResponse {
+  total: number;
+  items: SnapshotRecord[];
+}
+
+export interface SnapshotDetail extends SnapshotRecord {
+  details: {
+    description: string;
+  };
+}
+
+export interface SnapshotQuery {
+  createdStart?: string;
+  createdEnd?: string;
+  siteIds?: string[];
+  versionIds?: string[];
+  env?: EnvType | '';
+  severity?: Severity | '';
+  ruleId?: string;
+  createdBy?: string;
+  q?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+}

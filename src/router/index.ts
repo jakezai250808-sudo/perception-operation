@@ -12,6 +12,11 @@ export const router = createRouter({
         { path: 'compare', component: () => import('@/pages/compare/ComparePage.vue') },
         { path: 'events', component: () => import('@/pages/events/EventsPage.vue') },
         {
+          path: 'events/snapshots/:id',
+          component: () => import('@/pages/events/SnapshotDetailPage.vue'),
+          meta: { activeMenu: '/events' }
+        },
+        {
           path: 'events/:id',
           component: () => import('@/pages/event-detail/EventDetailPage.vue'),
           meta: { activeMenu: '/events' }

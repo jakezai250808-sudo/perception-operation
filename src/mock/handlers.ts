@@ -1,7 +1,16 @@
 import dayjs from 'dayjs';
 import type { AxiosRequestConfig } from 'axios';
-import type { CompareResponse, DashboardSummary, EventRecord, EventsQuery } from '@/types';
-import { allEvents, anomalyScore, rules, sites, versions } from './data';
+import type { CompareResponse, DashboardSummary, EventRecord, EventsQuery, SnapshotQuery } from '@/types';
+import {
+  allEvents,
+  anomalyScore,
+  getSnapshotDetail,
+  getSnapshotEvents,
+  rules,
+  sites,
+  snapshots,
+  versions
+} from './data';
 
 const toArr = (v?: string | string[]) => (Array.isArray(v) ? v : v ? v.split(',').filter(Boolean) : []);
 
@@ -144,6 +153,7 @@ export const handlers = {
         acc[item.ruleName] = (acc[item.ruleName] ?? 0) + item.count;
         return acc;
       }, {});
+
     const mapA = aggregateByRule(listA);
     const mapB = aggregateByRule(listB);
     const keys = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)]));
@@ -194,9 +204,7 @@ export const handlers = {
     }
 
     const startIdx = (page - 1) * pageSize;
-    const pageList = list.slice(startIdx, startIdx + pageSize);
-
-    return [200, { list: pageList, total: list.length, page, pageSize }];
+    return [200, { list: list.slice(startIdx, startIdx + pageSize), total: list.length, page, pageSize }];
   },
   '/api/events/:id': (config: AxiosRequestConfig) => {
     const id = config.url?.split('/').pop() ?? '';
@@ -232,5 +240,96 @@ export const handlers = {
       .slice(0, 5);
 
     return [200, { ...item, sameRuleTrend: sameRule, siteTopRules: topRules }];
+  },
+  '/api/snapshots': (config: AxiosRequestConfig) => {
+    const p = readParams(config);
+    const page = Number(p.get('page') ?? 1);
+    const pageSize = Number(p.get('pageSize') ?? 10);
+    const sort = p.get('sort') ?? 'createdAt:desc';
+
+    const query: SnapshotQuery = {
+      createdStart: p.get('createdStart') ?? undefined,
+      createdEnd: p.get('createdEnd') ?? undefined,
+      siteIds: toArr(p.get('siteIds') ?? undefined),
+      versionIds: toArr(p.get('versionIds') ?? undefined),
+      env: (p.get('env') as SnapshotQuery['env']) ?? '',
+      severity: (p.get('severity') as SnapshotQuery['severity']) ?? '',
+      ruleId: p.get('ruleId') ?? undefined,
+      createdBy: p.get('createdBy') ?? undefined,
+      q: p.get('q') ?? undefined
+    };
+
+    let list = snapshots.filter((snap) => {
+      if (query.createdStart && dayjs(snap.createdAt).isBefore(dayjs(query.createdStart))) return false;
+      if (query.createdEnd && dayjs(snap.createdAt).isAfter(dayjs(query.createdEnd))) return false;
+      if (query.siteIds?.length && !query.siteIds.some((id) => snap.filters.siteIds?.includes(id))) return false;
+      if (query.versionIds?.length && !query.versionIds.some((id) => snap.filters.versionIds?.includes(id))) return false;
+      if (query.env && snap.filters.env !== query.env) return false;
+      if (query.severity && snap.filters.severity !== query.severity) return false;
+      if (query.ruleId && snap.filters.ruleId !== query.ruleId) return false;
+      if (query.createdBy && !snap.createdBy.includes(query.createdBy)) return false;
+      if (query.q && !`${snap.id}${snap.name}`.toLowerCase().includes(query.q.toLowerCase())) return false;
+      return true;
+    });
+
+    const [field, order] = sort.split(':');
+    list = list.sort((a, b) => {
+      const left = String((a as unknown as Record<string, string | number>)[field] ?? '');
+      const right = String((b as unknown as Record<string, string | number>)[field] ?? '');
+      return order === 'asc' ? left.localeCompare(right) : right.localeCompare(left);
+    });
+
+    const startIdx = (page - 1) * pageSize;
+    return [200, { total: list.length, items: list.slice(startIdx, startIdx + pageSize) }];
+  },
+  '/api/snapshots/:id': (config: AxiosRequestConfig) => {
+    const id = config.url?.split('/').pop() ?? '';
+    const detail = getSnapshotDetail(id);
+    if (!detail) return [404, { message: 'not found' }];
+    return [200, detail];
+  },
+  '/api/snapshots/:id/download': (config: AxiosRequestConfig) => {
+    const [base, queryRaw] = (config.url ?? '').split('?');
+    const id = base.split('/').slice(-2)[0];
+    const params = new URLSearchParams(queryRaw ?? '');
+    const format = params.get('format') ?? 'csv';
+    const detail = getSnapshotDetail(id);
+    if (!detail) return [404, { message: 'not found' }];
+    if (detail.status !== 'ready') return [400, { message: 'snapshot unavailable' }];
+
+    const events = getSnapshotEvents(id);
+    if (format === 'json') {
+      return [200, JSON.stringify(events), { 'Content-Type': 'application/json' }];
+    }
+
+    const header = [
+      'id',
+      'timestamp',
+      'siteName',
+      'env',
+      'versionLabel',
+      'ruleId',
+      'ruleName',
+      'severity',
+      'count',
+      'sourceModule',
+      'message'
+    ].join(',');
+    const rows = events.map((e) =>
+      [
+        e.id,
+        e.timestamp,
+        e.siteName,
+        e.env,
+        e.versionLabel,
+        e.ruleId,
+        e.ruleName,
+        e.severity,
+        e.count,
+        e.sourceModule,
+        JSON.stringify(e.message)
+      ].join(',')
+    );
+    return [200, [header, ...rows].join('\n'), { 'Content-Type': 'text/csv;charset=utf-8' }];
   }
 };

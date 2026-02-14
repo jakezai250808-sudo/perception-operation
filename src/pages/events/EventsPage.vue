@@ -1,85 +1,159 @@
 <template>
   <div class="page-container">
-    <el-card class="panel" style="margin-bottom: 12px">
-      <el-form inline>
-        <el-form-item label="关键词"><el-input v-model="query.q" /></el-form-item>
-        <el-form-item label="规则"><el-select v-model="query.ruleId" clearable style="width: 160px"><el-option v-for="r in meta.rules" :key="r.id" :value="r.id" :label="r.name" /></el-select></el-form-item>
-        <el-form-item label="环境"><el-select v-model="query.env" clearable style="width: 120px"><el-option value="blue" label="blue" /><el-option value="green" label="green" /></el-select></el-form-item>
-        <el-button type="primary" @click="apply">检索</el-button>
-        <el-button @click="saveCurrentQuery">保存查询</el-button>
-        <el-button @click="exportList">导出CSV</el-button>
-      </el-form>
-    </el-card>
-    <ErrorState v-if="error" :message="error" />
-    <el-table v-else :data="list" v-loading="loading" @sort-change="onSortChange">
-      <el-table-column prop="timestamp" label="时间" sortable="custom" />
-      <el-table-column prop="siteName" label="局点" />
-      <el-table-column prop="env" label="环境" />
-      <el-table-column prop="versionLabel" label="版本" />
-      <el-table-column prop="ruleId" label="ruleId" />
-      <el-table-column prop="ruleName" label="ruleName" />
-      <el-table-column prop="severity" label="severity" />
-      <el-table-column prop="count" label="count" />
-      <el-table-column prop="sourceModule" label="sourceModule" />
-      <el-table-column prop="message" label="message" show-overflow-tooltip />
-      <el-table-column label="操作">
-        <template #default="{ row }"><el-button link type="primary" @click="goDetail(row.id)">详情</el-button></template>
-      </el-table-column>
-    </el-table>
-    <el-pagination
-      style="margin-top: 12px"
-      layout="total, prev, pager, next, sizes"
-      v-model:current-page="query.page"
-      v-model:page-size="query.pageSize"
-      :total="total"
-      @change="apply"
-    />
+    <el-tabs v-model="activeTab" @tab-change="onTabChange">
+      <el-tab-pane label="事件列表" name="events">
+        <EventsListTab
+          :query="eventQuery"
+          :meta="{ rules: meta.rules }"
+          :list="eventList"
+          :loading="eventLoading"
+          :error="eventError"
+          :total="eventTotal"
+          @apply="applyEvents"
+          @go-detail="goEventDetail"
+        />
+      </el-tab-pane>
+      <el-tab-pane label="快照 Snapshots" name="snapshots">
+        <SnapshotsTab
+          :query="snapshotQuery"
+          :list="snapshotList"
+          :loading="snapshotLoading"
+          :error="snapshotError"
+          :total="snapshotTotal"
+          :meta="{ sites: meta.sites, versions: meta.versions, rules: meta.rules }"
+          :downloading-map="downloadingMap"
+          @apply="applySnapshots"
+          @view="openSnapshot"
+          @download="downloadSnapshot"
+        />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { downloadSnapshotDetail } from '@/api/endpoints';
 import { useMetaStore } from '@/store/meta';
 import { useEventsQuery } from './useEventsQuery';
-import { exportToCsv } from '@/utils/csv';
-import { saveQuery } from '@/utils/queryPersistence';
-import ErrorState from '@/components/ErrorState.vue';
+import { useSnapshotsQuery } from './useSnapshotsQuery';
+import EventsListTab from './EventsListTab.vue';
+import SnapshotsTab from './SnapshotsTab.vue';
 
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
 const meta = useMetaStore();
-const { query, loading, error, list, total, search } = useEventsQuery({
-  q: String(route.query.q ?? ''),
-  ruleId: String(route.query.ruleId ?? ''),
-  env: (route.query.env as 'blue' | 'green' | '') ?? '',
-  page: Number(route.query.page ?? 1),
-  pageSize: Number(route.query.pageSize ?? 20),
-  sort: String(route.query.sort ?? '')
-});
+const downloadingMap = ref<Record<string, boolean>>({});
 
-const apply = async () => {
-  await router.replace({ query: query as never });
-  await search();
+const activeTab = ref(route.query.snapshotId || route.query.tab === 'snapshots' ? 'snapshots' : 'events');
+
+const { query: eventQuery, loading: eventLoading, error: eventError, list: eventList, total: eventTotal, search: searchEvents } =
+  useEventsQuery({
+    start: String(route.query.start ?? ''),
+    end: String(route.query.end ?? ''),
+    siteIds: String(route.query.siteIds ?? '').split(',').filter(Boolean),
+    versionIds: String(route.query.versionIds ?? '').split(',').filter(Boolean),
+    q: String(route.query.q ?? ''),
+    ruleId: String(route.query.ruleId ?? ''),
+    env: (route.query.env as 'blue' | 'green' | '') ?? '',
+    severity: (route.query.severity as 'P0' | 'P1' | 'P2' | 'P3' | '') ?? '',
+    page: Number(route.query.page ?? 1),
+    pageSize: Number(route.query.pageSize ?? 20),
+    sort: String(route.query.sort ?? '')
+  });
+
+const { query: snapshotQuery, loading: snapshotLoading, error: snapshotError, list: snapshotList, total: snapshotTotal, search: searchSnapshots } =
+  useSnapshotsQuery({
+    createdStart: String(route.query.snapshot_start ?? ''),
+    createdEnd: String(route.query.snapshot_end ?? ''),
+    siteIds: String(route.query.snapshot_siteIds ?? '').split(',').filter(Boolean),
+    versionIds: String(route.query.snapshot_versionIds ?? '').split(',').filter(Boolean),
+    env: (route.query.snapshot_env as 'blue' | 'green' | '') ?? '',
+    severity: (route.query.snapshot_severity as 'P0' | 'P1' | 'P2' | 'P3' | '') ?? '',
+    ruleId: String(route.query.snapshot_ruleId ?? ''),
+    createdBy: String(route.query.snapshot_createdBy ?? ''),
+    q: String(route.query.snapshot_q ?? ''),
+    page: Number(route.query.snapshot_page ?? 1),
+    pageSize: Number(route.query.snapshot_pageSize ?? 10),
+    sort: String(route.query.snapshot_sort ?? 'createdAt:desc')
+  });
+
+const applyEvents = async () => {
+  await router.replace({
+    query: {
+      ...route.query,
+      tab: activeTab.value,
+      start: eventQuery.start,
+      end: eventQuery.end,
+      siteIds: eventQuery.siteIds?.join(',') ?? '',
+      versionIds: eventQuery.versionIds?.join(',') ?? '',
+      env: eventQuery.env ?? '',
+      severity: eventQuery.severity ?? '',
+      ruleId: eventQuery.ruleId ?? '',
+      q: eventQuery.q ?? '',
+      page: String(eventQuery.page ?? 1),
+      pageSize: String(eventQuery.pageSize ?? 20),
+      sort: eventQuery.sort ?? ''
+    }
+  });
+  await searchEvents();
 };
 
-const goDetail = (id: string) => router.push({ path: `/events/${id}`, query: route.query });
-
-const onSortChange = ({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) => {
-  query.sort = order ? `${prop}:${order === 'ascending' ? 'asc' : 'desc'}` : '';
-  apply();
+const applySnapshots = async () => {
+  await router.replace({
+    query: {
+      ...route.query,
+      tab: activeTab.value,
+      snapshot_start: snapshotQuery.createdStart ?? '',
+      snapshot_end: snapshotQuery.createdEnd ?? '',
+      snapshot_siteIds: snapshotQuery.siteIds?.join(',') ?? '',
+      snapshot_versionIds: snapshotQuery.versionIds?.join(',') ?? '',
+      snapshot_env: snapshotQuery.env ?? '',
+      snapshot_severity: snapshotQuery.severity ?? '',
+      snapshot_ruleId: snapshotQuery.ruleId ?? '',
+      snapshot_createdBy: snapshotQuery.createdBy ?? '',
+      snapshot_q: snapshotQuery.q ?? '',
+      snapshot_page: String(snapshotQuery.page ?? 1),
+      snapshot_pageSize: String(snapshotQuery.pageSize ?? 10),
+      snapshot_sort: snapshotQuery.sort ?? ''
+    }
+  });
+  await searchSnapshots();
 };
 
-const exportList = () => exportToCsv('events.csv', list.value);
+const onTabChange = async (tab: string | number) => {
+  activeTab.value = String(tab);
+  await router.replace({ query: { ...route.query, tab: activeTab.value } });
+  if (activeTab.value === 'events') {
+    await applyEvents();
+  } else {
+    await applySnapshots();
+  }
+};
 
-const saveCurrentQuery = () => {
-  const name = window.prompt('请输入查询名称');
-  if (!name) return;
-  saveQuery({ name, query: route.query as Record<string, string> });
+const goEventDetail = (id: string) => router.push({ path: `/events/${id}`, query: route.query });
+const openSnapshot = (id: string) => router.push({ path: `/events/snapshots/${id}`, query: { ...route.query, tab: 'snapshots', snapshotId: id } });
+
+const downloadSnapshot = async (id: string, format: 'csv' | 'json') => {
+  if (downloadingMap.value[id]) return;
+  downloadingMap.value[id] = true;
+  try {
+    const blob = await downloadSnapshotDetail(id, format);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${id}-detail.${format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } finally {
+    downloadingMap.value[id] = false;
+  }
 };
 
 onMounted(async () => {
   await meta.bootstrap();
-  await apply();
+  await applyEvents();
+  await applySnapshots();
 });
 </script>

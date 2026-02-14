@@ -1,5 +1,16 @@
 import { apiClient } from './client';
-import type { CompareResponse, DashboardSummary, EventsQuery, PagedEvents, Rule, Site, Version } from '@/types';
+import type {
+  CompareResponse,
+  DashboardSummary,
+  EventsQuery,
+  PagedEvents,
+  Rule,
+  Site,
+  SnapshotDetail,
+  SnapshotListResponse,
+  SnapshotQuery,
+  Version
+} from '@/types';
 
 export const getSites = async () => (await apiClient.get<Site[]>('/meta/sites')).data;
 export const getVersions = async () => (await apiClient.get<Version[]>('/meta/versions')).data;
@@ -16,6 +27,14 @@ export const getEvents = async (params: Record<string, string | number>) =>
 
 export const getEventDetail = async (id: string) => (await apiClient.get(`/events/${id}`)).data;
 
+export const getSnapshots = async (params: Record<string, string | number>) =>
+  (await apiClient.get<SnapshotListResponse>('/snapshots', { params })).data;
+
+export const getSnapshotDetail = async (id: string) => (await apiClient.get<SnapshotDetail>(`/snapshots/${id}`)).data;
+
+export const downloadSnapshotDetail = async (id: string, format: 'csv' | 'json') =>
+  (await apiClient.get(`/snapshots/${id}/download`, { params: { format }, responseType: 'blob' })).data as Blob;
+
 export function buildEventsParams(query: EventsQuery): Record<string, string | number> {
   return {
     start: query.start ?? '',
@@ -25,6 +44,23 @@ export function buildEventsParams(query: EventsQuery): Record<string, string | n
     env: query.env ?? '',
     severity: query.severity ?? '',
     ruleId: query.ruleId ?? '',
+    q: query.q ?? '',
+    page: query.page ?? 1,
+    pageSize: query.pageSize ?? 20,
+    sort: query.sort ?? ''
+  };
+}
+
+export function buildSnapshotParams(query: SnapshotQuery): Record<string, string | number> {
+  return {
+    createdStart: query.createdStart ?? '',
+    createdEnd: query.createdEnd ?? '',
+    siteIds: query.siteIds?.join(',') ?? '',
+    versionIds: query.versionIds?.join(',') ?? '',
+    env: query.env ?? '',
+    severity: query.severity ?? '',
+    ruleId: query.ruleId ?? '',
+    createdBy: query.createdBy ?? '',
     q: query.q ?? '',
     page: query.page ?? 1,
     pageSize: query.pageSize ?? 20,
