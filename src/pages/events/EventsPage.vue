@@ -1,43 +1,37 @@
 <template>
   <div class="page-container">
-    <el-tabs v-model="activeTab" @tab-change="onTabChange">
-      <el-tab-pane label="事件列表" name="events">
-        <EventsListTab
-          :query="eventQuery"
-          :meta="{ rules: meta.rules }"
-          :list="eventList"
-          :loading="eventLoading"
-          :error="eventError"
-          :total="eventTotal"
-          @apply="applyEvents"
-          @go-detail="goEventDetail"
-        />
-      </el-tab-pane>
+    <EventsListTab
+      v-if="activeTab === 'events'"
+      :query="eventQuery"
+      :meta="{ rules: meta.rules }"
+      :list="eventList"
+      :loading="eventLoading"
+      :error="eventError"
+      :total="eventTotal"
+      @apply="applyEvents"
+      @go-detail="goEventDetail"
+    />
 
-      <el-tab-pane label="快照 Snapshots" name="snapshots">
-        <SnapshotsTab
-          :query="snapshotQuery"
-          :list="snapshotList"
-          :loading="snapshotLoading"
-          :error="snapshotError"
-          :total="snapshotTotal"
-          :meta="{ sites: meta.sites, versions: meta.versions, rules: meta.rules }"
-          :downloading-map="downloadingMap"
-          @apply="applySnapshots"
-          @view="openSnapshot"
-          @download="downloadSnapshot"
-        />
-      </el-tab-pane>
+    <SnapshotsTab
+      v-else-if="activeTab === 'snapshots'"
+      :query="snapshotQuery"
+      :list="snapshotList"
+      :loading="snapshotLoading"
+      :error="snapshotError"
+      :total="snapshotTotal"
+      :meta="{ sites: meta.sites, versions: meta.versions, rules: meta.rules }"
+      :downloading-map="downloadingMap"
+      @apply="applySnapshots"
+      @view="openSnapshot"
+      @download="downloadSnapshot"
+    />
 
-      <el-tab-pane label="地图 Map" name="map">
-        <MapTab />
-      </el-tab-pane>
-    </el-tabs>
+    <MapTab v-else />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { downloadSnapshotDetail } from '@/api/endpoints';
 import { useMetaStore } from '@/store/meta';
@@ -52,7 +46,11 @@ const router = useRouter();
 const meta = useMetaStore();
 const downloadingMap = ref<Record<string, boolean>>({});
 
-const activeTab = ref(route.query.tab === 'map' ? 'map' : route.query.snapshotId || route.query.tab === 'snapshots' ? 'snapshots' : 'events');
+const activeTab = computed(() => {
+  if (route.query.tab === 'snapshots') return 'snapshots';
+  if (route.query.tab === 'map') return 'map';
+  return 'events';
+});
 
 const { query: eventQuery, loading: eventLoading, error: eventError, list: eventList, total: eventTotal, search: searchEvents } =
   useEventsQuery({
@@ -95,7 +93,7 @@ const applyEvents = async () => {
   await router.replace({
     query: {
       ...route.query,
-      tab: activeTab.value,
+      tab: 'events',
       start: eventQuery.start,
       end: eventQuery.end,
       siteIds: eventQuery.siteIds?.join(',') ?? '',
@@ -116,7 +114,7 @@ const applySnapshots = async () => {
   await router.replace({
     query: {
       ...route.query,
-      tab: activeTab.value,
+      tab: 'snapshots',
       snapshot_start: snapshotQuery.createdStart ?? '',
       snapshot_end: snapshotQuery.createdEnd ?? '',
       snapshot_siteIds: snapshotQuery.siteIds?.join(',') ?? '',
@@ -132,15 +130,6 @@ const applySnapshots = async () => {
     }
   });
   await searchSnapshots();
-};
-
-const onTabChange = async () => {
-  await router.replace({ query: { ...route.query, tab: activeTab.value } });
-  if (activeTab.value === 'events') {
-    await applyEvents();
-  } else if (activeTab.value === 'snapshots') {
-    await applySnapshots();
-  }
 };
 
 const goEventDetail = (id: string) => router.push({ path: `/events/${id}`, query: route.query });
@@ -164,9 +153,17 @@ const downloadSnapshot = async (id: string, format: 'csv' | 'json') => {
   }
 };
 
+watch(
+  () => route.query.tab,
+  async () => {
+    if (activeTab.value === 'events') await searchEvents();
+    if (activeTab.value === 'snapshots') await searchSnapshots();
+  }
+);
+
 onMounted(async () => {
   await meta.bootstrap();
-  await applyEvents();
-  await applySnapshots();
+  await searchEvents();
+  await searchSnapshots();
 });
 </script>
