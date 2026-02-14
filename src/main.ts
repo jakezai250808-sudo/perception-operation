@@ -10,6 +10,7 @@ import VChart from 'vue-echarts';
 import App from './App.vue';
 import { router } from './router';
 import './styles/theme.css';
+import './styles/sidebar.css';
 
 echarts.use([CanvasRenderer, BarChart, LineChart, TooltipComponent, LegendComponent, GridComponent]);
 
