@@ -1,14 +1,32 @@
-:root {
+:root,
+[data-theme='dark'] {
   color-scheme: dark;
   --bg-page: #0b1220;
-  --bg-panel: #121a2b;
-  --bg-panel-2: #0f172a;
   --text-primary: #e6edf7;
   --text-secondary: #94a3b8;
-  --brand: #3b82f6;
   --brand-soft: rgba(59, 130, 246, 0.18);
   --border-soft: rgba(148, 163, 184, 0.22);
   --shadow-soft: 0 10px 30px rgba(2, 8, 20, 0.35);
+  --panel-bg: linear-gradient(180deg, rgba(18, 26, 43, 0.95), rgba(15, 23, 42, 0.95));
+  --header-bg: linear-gradient(90deg, rgba(18, 26, 43, 0.9), rgba(15, 23, 42, 0.75));
+  --sidebar-bg: rgba(15, 23, 42, 0.7);
+  --menu-text: #dbe7ff;
+  --menu-active-text: #dbe7ff;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --bg-page: #f3f6fb;
+  --text-primary: #1f2937;
+  --text-secondary: #64748b;
+  --brand-soft: rgba(37, 99, 235, 0.12);
+  --border-soft: rgba(15, 23, 42, 0.12);
+  --shadow-soft: 0 10px 26px rgba(15, 23, 42, 0.08);
+  --panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  --header-bg: linear-gradient(90deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+  --sidebar-bg: rgba(255, 255, 255, 0.9);
+  --menu-text: #334155;
+  --menu-active-text: #1e40af;
 }
 
 * {
@@ -39,7 +57,7 @@ body {
 
 .app-header {
   border-bottom: 1px solid var(--border-soft);
-  background: linear-gradient(90deg, rgba(18, 26, 43, 0.9), rgba(15, 23, 42, 0.75));
+  background: var(--header-bg);
   backdrop-filter: blur(8px);
 }
 
@@ -62,7 +80,7 @@ body {
 
 .app-sidebar {
   border-right: 1px solid var(--border-soft);
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--sidebar-bg);
 }
 
 .app-main {
@@ -74,14 +92,14 @@ body {
 }
 
 .panel {
-  background: linear-gradient(180deg, rgba(18, 26, 43, 0.95), rgba(15, 23, 42, 0.95)) !important;
+  background: var(--panel-bg) !important;
   border: 1px solid var(--border-soft) !important;
   border-radius: 12px !important;
   box-shadow: var(--shadow-soft);
 }
 
 .panel .el-card__header {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid var(--border-soft);
   padding: 12px 16px;
 }
 
@@ -106,7 +124,7 @@ body {
 
 .el-menu-item.is-active {
   background: var(--brand-soft) !important;
-  color: #cfe0ff !important;
+  color: var(--menu-active-text) !important;
 }
 
 .el-form-item__label {
