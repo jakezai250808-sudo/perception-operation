@@ -141,7 +141,7 @@ const configItems: ConfigItem[] = [
   { id: 'safe-redundancy', type: 'redundancy', label: '冗余安全包', desc: '备用传感器+双计算/供电', price: 98000, step: 4 }
 ];
 
-const modelUrl = '/assets/models/dump_truck.glb';
+const modelUrl = '/assets/models/dump_truck_tle.glb';
 
 const activeOverlayTypes = computed<OverlayType[]>(() => {
   if (selectedStep.value <= 0) return [];

@@ -74,34 +74,60 @@ src/
 
 ## 宽体自卸车选配 Demo（矿卡）模型说明
 
-选配页的 3D 查看器会加载以下模型路径：
+本页面视觉基准参考：同力重工 TLE 系列产品页（仅作风格参考，不含其受保护商业素材）  
+https://www.sntonly.com/product/pro-detail-121823.htm
 
-- `public/assets/models/dump_truck.glb`
+选配器支持双路径：
 
-### 默认下载脚本
+1. **3D 模型优先路径**（`public/assets/models/dump_truck_tle.glb`）
+2. **360 序列帧回退路径**（`public/assets/dumptruck360/frame_00.svg ... frame_35.svg`）
 
-仓库提供 `scripts/download-assets.mjs`，可在网络可达时下载默认 GLB 到指定路径：
+当 3D 车模缺失或加载失败时，会自动切换到 360 帧模式（仍支持传感器叠加与步骤动画）。
+
+### 文件路径约定
+
+- 车模型：`public/assets/models/dump_truck_tle.glb`
+- 传感器模型（真实 GLB，建议替换为可商用授权模型）：
+  - `public/assets/sensors/lidar.glb`
+  - `public/assets/sensors/radar.glb`
+  - `public/assets/sensors/camera.glb`
+
+### 下载脚本
 
 ```bash
 node scripts/download-assets.mjs
 ```
 
-你也可以用环境变量改为你自己的模型地址：
+可通过环境变量指定下载地址（建议填你们已审计许可的真实模型地址）：
 
 ```bash
-DUMP_TRUCK_MODEL_URL="https://your-host/dump-truck.glb" node scripts/download-assets.mjs
+DUMP_TRUCK_MODEL_URL="https://your-host/dump_truck_tle.glb" \
+SENSOR_LIDAR_URL="https://your-host/lidar.glb" \
+SENSOR_RADAR_URL="https://your-host/radar.glb" \
+SENSOR_CAMERA_URL="https://your-host/camera.glb" \
+node scripts/download-assets.mjs
 ```
 
-### 模型来源与许可（当前默认）
+> 如果不提供 `SENSOR_*_URL`，脚本会跳过对应传感器下载。
 
-- **来源**：Khronos glTF Sample Models - CesiumMilkTruck
-  - https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/CesiumMilkTruck
-- **许可**：遵循该仓库与模型页面声明（示例资源通常为开放演示用途，请在商用前再次核验）
+### 当前默认资源来源与许可说明
 
-### 替换为更真实矿卡模型
+- 默认车模下载地址：
+  - Khronos glTF Sample Models - CesiumMilkTruck  
+    https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/CesiumMilkTruck
+- 许可说明：请以模型来源页面的最新许可条款为准；用于正式演示/商用前，务必由你们法务确认。
+- 传感器模型：当前仓库仅提供路径规范与下载入口，**请替换为真实传感器数模并补充署名**。
 
-建议替换为你们业务侧确认可用的 **非公路矿用宽体自卸车** GLB/GLTF，并保持文件名：
+### 传感器署名模板（CC BY 示例）
 
-- `public/assets/models/dump_truck.glb`
+当使用 CC BY 模型时，请在 README 增加：
 
-替换后无需改代码，选配器会自动加载新模型，并使用包围盒推断挂点（可加 `?debugAnchors=1` 查看锚点调试球与坐标轴）。
+- 传感器类型：LiDAR / Radar / Camera
+- 模型链接：<URL>
+- 作者：<Author>
+- License：CC BY 4.0
+- 署名文本："<Model Name> by <Author>, licensed under CC BY 4.0"
+
+### 锚点调试
+
+在 URL 增加 `?debugAnchors=1` 可查看挂点调试（3D 模式显示坐标轴球点，360 模式显示十字锚点）。
