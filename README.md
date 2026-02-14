@@ -2,14 +2,14 @@
 
 ## 启动方式
 ```bash
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
 构建与检查：
 ```bash
-pnpm lint
-pnpm build
+npm run lint
+npm run build
 ```
 
 ## 技术栈
