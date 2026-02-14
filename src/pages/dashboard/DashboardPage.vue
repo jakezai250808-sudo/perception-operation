@@ -78,20 +78,26 @@
 
       <DumpTruckViewer :model-url="modelUrl" :active-types="activeOverlayTypes" />
 
-      <ChartCard title="已选配置清单（Mock 价格）">
-        <el-empty v-if="selectedItems.length === 0" description="请点击“下一步选配”开始" />
-        <div v-else class="chips-wrap">
+      <el-card class="config-summary-compact" shadow="never">
+        <template #header>
+          <div class="summary-head">
+            <span>已选配置（Mock 价格）</span>
+            <span class="summary-count">{{ selectedItems.length }} 项</span>
+          </div>
+        </template>
+        <el-empty v-if="selectedItems.length === 0" description="请点击“下一步选配”开始" :image-size="42" />
+        <div v-else class="chips-wrap compact">
           <el-tag
             v-for="item in selectedItems"
             :key="item.id"
             :type="item.type === 'lidar' ? 'danger' : item.type === 'radar' ? 'warning' : item.type === 'camera' ? 'primary' : 'success'"
-            size="large"
+            size="small"
             effect="dark"
           >
-            {{ item.label }} · {{ item.desc }} · ¥{{ item.price.toLocaleString() }}
+            {{ item.label }} ¥{{ item.price.toLocaleString() }}
           </el-tag>
         </div>
-      </ChartCard>
+      </el-card>
     </section>
   </div>
 </template>
@@ -271,10 +277,32 @@ const jumpToEvents = () => {
   font-size: 13px;
 }
 
+.config-summary-compact {
+  --el-card-padding: 10px;
+}
+
+.summary-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.summary-count {
+  color: #83beff;
+  font-size: 12px;
+}
+
 .chips-wrap {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.chips-wrap.compact {
+  gap: 6px;
+  max-height: 52px;
+  overflow: auto;
 }
 
 @media (max-width: 980px) {
