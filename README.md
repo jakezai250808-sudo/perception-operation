@@ -6,6 +6,8 @@ npm install
 npm run dev
 ```
 
+默认会监听 `0.0.0.0:5173`，局域网内可通过 `http://<你的本机IP>:5173` 访问。
+
 构建与检查：
 ```bash
 npm run lint
