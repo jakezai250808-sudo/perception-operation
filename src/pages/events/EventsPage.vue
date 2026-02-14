@@ -5,14 +5,15 @@
         <div>
           <strong>事件中心</strong>
           <span style="margin-left: 8px; color: var(--text-secondary)">
-            {{ activeTab === 'snapshots' ? '当前：快照视图' : '当前：事件列表' }}
+            {{ activeTab === 'snapshots' ? '当前：快照视图' : activeTab === 'map' ? '当前：地图视图' : '当前：事件列表' }}
           </span>
         </div>
         <el-segmented
           v-model="activeTab"
           :options="[
             { label: '事件列表', value: 'events' },
-            { label: '快照', value: 'snapshots' }
+            { label: '快照', value: 'snapshots' },
+            { label: '地图', value: 'map' }
           ]"
           @change="onTabChange"
         />
@@ -32,7 +33,7 @@
     />
 
     <SnapshotsTab
-      v-else
+      v-else-if="activeTab === 'snapshots'"
       :query="snapshotQuery"
       :list="snapshotList"
       :loading="snapshotLoading"
@@ -44,6 +45,11 @@
       @view="openSnapshot"
       @download="downloadSnapshot"
     />
+
+    <MapTab
+      v-else
+    />
+
   </div>
 </template>
 
@@ -56,13 +62,14 @@ import { useEventsQuery } from './useEventsQuery';
 import { useSnapshotsQuery } from './useSnapshotsQuery';
 import EventsListTab from './EventsListTab.vue';
 import SnapshotsTab from './SnapshotsTab.vue';
+import MapTab from './components/MapTab.vue';
 
 const route = useRoute();
 const router = useRouter();
 const meta = useMetaStore();
 const downloadingMap = ref<Record<string, boolean>>({});
 
-const activeTab = ref(route.query.snapshotId || route.query.tab === 'snapshots' ? 'snapshots' : 'events');
+const activeTab = ref(route.query.tab === 'map' ? 'map' : route.query.snapshotId || route.query.tab === 'snapshots' ? 'snapshots' : 'events');
 
 const { query: eventQuery, loading: eventLoading, error: eventError, list: eventList, total: eventTotal, search: searchEvents } =
   useEventsQuery({
@@ -148,7 +155,7 @@ const onTabChange = async () => {
   await router.replace({ query: { ...route.query, tab: activeTab.value } });
   if (activeTab.value === 'events') {
     await applyEvents();
-  } else {
+  } else if (activeTab.value === 'snapshots') {
     await applySnapshots();
   }
 };

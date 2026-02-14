@@ -4,9 +4,12 @@ import type { CompareResponse, DashboardSummary, EventRecord, EventsQuery, Snaps
 import {
   allEvents,
   anomalyScore,
+  geoEvents,
   getSnapshotDetail,
   getSnapshotEvents,
+  pointCloudByEventId,
   rules,
+  sitePolylines,
   sites,
   snapshots,
   versions
@@ -37,6 +40,43 @@ export const handlers = {
   '/api/meta/sites': () => [200, sites],
   '/api/meta/versions': () => [200, versions],
   '/api/meta/rules': () => [200, rules],
+  '/api/maps/xodr': (config: AxiosRequestConfig) => {
+    const p = readParams(config);
+    const siteId = p.get('siteId') ?? 'site-bj';
+    const site = sites.find((s) => s.id === siteId);
+    return [200, { url: site?.map?.xodrUrl, polylines: sitePolylines[siteId] ?? [] }];
+  },
+  '/api/events/geo': (config: AxiosRequestConfig) => {
+    const p = readParams(config);
+    const start = p.get('start');
+    const end = p.get('end');
+    const siteId = p.get('siteId');
+    const env = p.get('env');
+    const versions = toArr(p.get('versionIds') ?? undefined);
+    const severity = toArr(p.get('severity') ?? undefined);
+    const ruleId = p.get('ruleId');
+    const q = p.get('q');
+    const limit = Number(p.get('limit') ?? 500);
+
+    const list = geoEvents
+      .filter((e) => {
+        if (siteId && e.siteId !== siteId) return false;
+        if (start && dayjs(e.ts).isBefore(dayjs(start))) return false;
+        if (end && dayjs(e.ts).isAfter(dayjs(end))) return false;
+        if (env && env !== 'all' && e.env !== env) return false;
+        if (versions.length && !versions.includes(e.version)) return false;
+        if (severity.length && !severity.includes(e.severity)) return false;
+        if (ruleId && e.ruleId !== ruleId) return false;
+        if (q && !`${e.id}${e.message}`.toLowerCase().includes(q.toLowerCase())) return false;
+        return true;
+      })
+      .slice(0, limit);
+    return [200, { items: list }];
+  },
+  '/api/events/:id/pointcloud': (config: AxiosRequestConfig) => {
+    const id = config.url?.split('/').slice(-2)[0] ?? '';
+    return [200, { items: pointCloudByEventId[id] ?? [] }];
+  },
   '/api/dashboard/summary': (config: AxiosRequestConfig) => {
     const params = readParams(config);
     const list = filterEvents({
@@ -302,34 +342,8 @@ export const handlers = {
       return [200, JSON.stringify(events), { 'Content-Type': 'application/json' }];
     }
 
-    const header = [
-      'id',
-      'timestamp',
-      'siteName',
-      'env',
-      'versionLabel',
-      'ruleId',
-      'ruleName',
-      'severity',
-      'count',
-      'sourceModule',
-      'message'
-    ].join(',');
-    const rows = events.map((e) =>
-      [
-        e.id,
-        e.timestamp,
-        e.siteName,
-        e.env,
-        e.versionLabel,
-        e.ruleId,
-        e.ruleName,
-        e.severity,
-        e.count,
-        e.sourceModule,
-        JSON.stringify(e.message)
-      ].join(',')
-    );
+    const header = ['id', 'timestamp', 'siteName', 'env', 'versionLabel', 'ruleId', 'ruleName', 'severity', 'count', 'sourceModule', 'message'].join(',');
+    const rows = events.map((e) => [e.id, e.timestamp, e.siteName, e.env, e.versionLabel, e.ruleId, e.ruleName, e.severity, e.count, e.sourceModule, JSON.stringify(e.message)].join(','));
     return [200, [header, ...rows].join('\n'), { 'Content-Type': 'text/csv;charset=utf-8' }];
   }
 };

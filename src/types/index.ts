@@ -5,6 +5,7 @@ export interface Site {
   id: string;
   name: string;
   city: string;
+  map?: SiteMapMeta;
 }
 
 export interface Version {
@@ -137,4 +138,36 @@ export interface SnapshotQuery {
   page?: number;
   pageSize?: number;
   sort?: string;
+}
+
+
+export interface SiteMapMeta {
+  xodrUrl: string;
+  bbox: { minX: number; maxX: number; minY: number; maxY: number };
+}
+
+export interface GeoPosition {
+  world: { x: number; y: number; z?: number };
+  lane?: { roadId: string; s: number; t: number };
+}
+
+export interface GeoEvent {
+  id: string;
+  ts: string;
+  siteId: string;
+  env: EnvType;
+  version: string;
+  severity: Severity;
+  ruleId: string;
+  message: string;
+  position: GeoPosition;
+}
+
+export interface PointCloudAsset {
+  id: string;
+  type: "pcd";
+  url: string;
+  frameId?: string;
+  sensor?: string;
+  createdAt?: string;
 }

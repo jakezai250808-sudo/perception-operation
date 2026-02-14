@@ -2,6 +2,8 @@ import dayjs from 'dayjs';
 import type {
   EnvType,
   EventRecord,
+  GeoEvent,
+  PointCloudAsset,
   Rule,
   Severity,
   Site,
@@ -15,10 +17,43 @@ const severities: Severity[] = ['P0', 'P1', 'P2', 'P3'];
 const modules = ['perception', 'planner', 'localization', 'controller', 'scheduler'];
 const creators = ['alice.ops', 'bob.ops', 'charlie.ops', 'diana.sre'];
 
+export const sitePolylines: Record<string, Array<Array<[number, number]>>> = {
+  'site-bj': [
+    [[-400, -50], [-250, -20], [-80, 20], [120, 40], [360, 20]],
+    [[-360, -140], [-120, -100], [120, -120], [340, -180]],
+    [[-250, 180], [-20, 120], [220, 110], [400, 90]]
+  ],
+  'site-sh': [
+    [[-420, 30], [-200, 60], [20, 80], [240, 140], [420, 210]],
+    [[-420, -120], [-240, -60], [20, -20], [250, 30], [420, 90]],
+    [[-120, -220], [20, -130], [150, -60], [290, 0]]
+  ],
+  'site-sz': [
+    [[-350, 220], [-180, 100], [20, -20], [180, -120], [320, -210]],
+    [[-380, 120], [-170, 30], [60, 0], [300, 20]],
+    [[-300, -60], [-120, -100], [120, -140], [300, -180]]
+  ]
+};
+
 export const sites: Site[] = [
-  { id: 'site-bj', name: '北京局点', city: '北京' },
-  { id: 'site-sh', name: '上海局点', city: '上海' },
-  { id: 'site-sz', name: '深圳局点', city: '深圳' }
+  {
+    id: 'site-bj',
+    name: '北京局点',
+    city: '北京',
+    map: { xodrUrl: '/maps/site-bj.xodr', bbox: { minX: -500, maxX: 500, minY: -300, maxY: 300 } }
+  },
+  {
+    id: 'site-sh',
+    name: '上海局点',
+    city: '上海',
+    map: { xodrUrl: '/maps/site-sh.xodr', bbox: { minX: -500, maxX: 500, minY: -300, maxY: 300 } }
+  },
+  {
+    id: 'site-sz',
+    name: '深圳局点',
+    city: '深圳',
+    map: { xodrUrl: '/maps/site-sz.xodr', bbox: { minX: -500, maxX: 500, minY: -300, maxY: 300 } }
+  }
 ];
 
 export const versions: Version[] = [
@@ -63,6 +98,8 @@ export function anomalyScore(current: number, baseline: number): number {
 
 export const allEvents: EventRecord[] = generateEvents();
 export const snapshots: SnapshotRecord[] = generateSnapshots();
+export const geoEvents: GeoEvent[] = generateGeoEvents();
+export const pointCloudByEventId: Record<string, PointCloudAsset[]> = generatePointCloudAssets();
 
 function generateEvents(): EventRecord[] {
   const items: EventRecord[] = [];
@@ -178,6 +215,58 @@ function generateSnapshots(): SnapshotRecord[] {
       status: statuses[idx % statuses.length]
     };
   });
+}
+
+function sampleLinePoint(line: Array<[number, number]>, seed: number): { x: number; y: number } {
+  const i = Math.floor(random(seed) * (line.length - 1));
+  const [x1, y1] = line[i];
+  const [x2, y2] = line[i + 1];
+  const t = random(seed + 1);
+  return { x: x1 + (x2 - x1) * t, y: y1 + (y2 - y1) * t };
+}
+
+function generateGeoEvents(): GeoEvent[] {
+  const now = dayjs();
+  return allEvents.slice(0, 420).map((event, idx) => {
+    const lines = sitePolylines[event.siteId] ?? sitePolylines['site-bj'];
+    const line = lines[idx % lines.length];
+    const p = sampleLinePoint(line, idx * 13 + event.count);
+    return {
+      id: event.id,
+      ts: now.subtract(idx % 48, 'hour').toISOString(),
+      siteId: event.siteId,
+      env: event.env,
+      version: event.versionId,
+      severity: event.severity,
+      ruleId: event.ruleId,
+      message: event.message,
+      position: {
+        world: { x: p.x + (random(idx + 11) - 0.5) * 8, y: p.y + (random(idx + 19) - 0.5) * 8, z: 0 },
+        lane: { roadId: `road-${idx % 12}`, s: Number((random(idx + 5) * 100).toFixed(2)), t: Number((random(idx + 6) * 3 - 1.5).toFixed(2)) }
+      }
+    };
+  });
+}
+
+function generatePointCloudAssets(): Record<string, PointCloudAsset[]> {
+  const map: Record<string, PointCloudAsset[]> = {};
+  geoEvents.forEach((e, idx) => {
+    if (idx < 15) {
+      map[e.id] = [
+        {
+          id: `PCD-${e.id}`,
+          type: 'pcd',
+          url: idx % 2 === 0 ? '/assets/pcd/sample-a.pcd' : '/assets/pcd/sample-b.pcd',
+          frameId: `frame-${idx}`,
+          sensor: idx % 2 === 0 ? 'lidar-top' : 'lidar-front',
+          createdAt: e.ts
+        }
+      ];
+    } else {
+      map[e.id] = [];
+    }
+  });
+  return map;
 }
 
 export function getSnapshotDetail(id: string): SnapshotDetail | undefined {
