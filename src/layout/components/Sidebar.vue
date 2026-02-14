@@ -5,7 +5,7 @@
       <span v-if="!collapsed" class="logo-text">运营可观测平台</span>
     </div>
 
-    <el-menu :default-active="activeKey" class="sidebar-menu">
+    <el-menu :default-active="activeKey" class="sidebar-menu" :collapse="collapsed" unique-opened>
       <SidebarItem
         v-for="item in visibleMenus"
         :key="item.key"
@@ -25,6 +25,7 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { menuSchema } from '@/config/menu';
+import type { MenuItem } from '@/config/menu';
 import { useAppStore } from '@/store/app';
 import SidebarItem from './SidebarItem.vue';
 
@@ -33,16 +34,35 @@ const route = useRoute();
 const router = useRouter();
 
 const collapsed = computed(() => app.sidebarCollapsed);
-const activeKey = computed(() => (route.meta.activeMenu as string) || route.path);
 
-const visibleMenus = computed(() =>
-  menuSchema.filter((item) => !item.hidden && (!item.roles?.length || item.roles.includes(app.role)))
-);
+const activeKey = computed(() => {
+  if (route.meta.activeMenu) return String(route.meta.activeMenu);
+  if (route.path === '/events') {
+    return route.query.tab === 'snapshots' ? '/events/snapshots' : '/events/list';
+  }
+  return route.path;
+});
+
+const filterMenuByRole = (items: MenuItem[]): MenuItem[] =>
+  items
+    .filter((item) => !item.hidden && (!item.roles?.length || item.roles.includes(app.role)))
+    .map((item) => ({
+      ...item,
+      children: item.children ? filterMenuByRole(item.children) : undefined
+    }));
+
+const visibleMenus = computed(() => filterMenuByRole(menuSchema));
 
 const toggle = () => app.toggleSidebar();
 
 const navigate = async (path: string) => {
-  await router.push({ path, query: route.query });
+  if (path.includes('?')) {
+    const [pathname, search] = path.split('?');
+    const query = Object.fromEntries(new URLSearchParams(search).entries());
+    await router.push({ path: pathname, query: { ...route.query, ...query } });
+  } else {
+    await router.push({ path, query: route.query });
+  }
   if (app.isMobile) app.setDrawerVisible(false);
 };
 </script>

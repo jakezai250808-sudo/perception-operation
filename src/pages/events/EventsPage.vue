@@ -1,33 +1,49 @@
 <template>
   <div class="page-container">
-    <el-tabs v-model="activeTab" @tab-change="onTabChange">
-      <el-tab-pane label="事件列表" name="events">
-        <EventsListTab
-          :query="eventQuery"
-          :meta="{ rules: meta.rules }"
-          :list="eventList"
-          :loading="eventLoading"
-          :error="eventError"
-          :total="eventTotal"
-          @apply="applyEvents"
-          @go-detail="goEventDetail"
+    <el-card class="panel" style="margin-bottom: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <div>
+          <strong>事件中心</strong>
+          <span style="margin-left: 8px; color: var(--text-secondary)">
+            {{ activeTab === 'snapshots' ? '当前：快照视图' : '当前：事件列表' }}
+          </span>
+        </div>
+        <el-segmented
+          v-model="activeTab"
+          :options="[
+            { label: '事件列表', value: 'events' },
+            { label: '快照', value: 'snapshots' }
+          ]"
+          @change="onTabChange"
         />
-      </el-tab-pane>
-      <el-tab-pane label="快照 Snapshots" name="snapshots">
-        <SnapshotsTab
-          :query="snapshotQuery"
-          :list="snapshotList"
-          :loading="snapshotLoading"
-          :error="snapshotError"
-          :total="snapshotTotal"
-          :meta="{ sites: meta.sites, versions: meta.versions, rules: meta.rules }"
-          :downloading-map="downloadingMap"
-          @apply="applySnapshots"
-          @view="openSnapshot"
-          @download="downloadSnapshot"
-        />
-      </el-tab-pane>
-    </el-tabs>
+      </div>
+    </el-card>
+
+    <EventsListTab
+      v-if="activeTab === 'events'"
+      :query="eventQuery"
+      :meta="{ rules: meta.rules }"
+      :list="eventList"
+      :loading="eventLoading"
+      :error="eventError"
+      :total="eventTotal"
+      @apply="applyEvents"
+      @go-detail="goEventDetail"
+    />
+
+    <SnapshotsTab
+      v-else
+      :query="snapshotQuery"
+      :list="snapshotList"
+      :loading="snapshotLoading"
+      :error="snapshotError"
+      :total="snapshotTotal"
+      :meta="{ sites: meta.sites, versions: meta.versions, rules: meta.rules }"
+      :downloading-map="downloadingMap"
+      @apply="applySnapshots"
+      @view="openSnapshot"
+      @download="downloadSnapshot"
+    />
   </div>
 </template>
 
@@ -63,21 +79,27 @@ const { query: eventQuery, loading: eventLoading, error: eventError, list: event
     sort: String(route.query.sort ?? '')
   });
 
-const { query: snapshotQuery, loading: snapshotLoading, error: snapshotError, list: snapshotList, total: snapshotTotal, search: searchSnapshots } =
-  useSnapshotsQuery({
-    createdStart: String(route.query.snapshot_start ?? ''),
-    createdEnd: String(route.query.snapshot_end ?? ''),
-    siteIds: String(route.query.snapshot_siteIds ?? '').split(',').filter(Boolean),
-    versionIds: String(route.query.snapshot_versionIds ?? '').split(',').filter(Boolean),
-    env: (route.query.snapshot_env as 'blue' | 'green' | '') ?? '',
-    severity: (route.query.snapshot_severity as 'P0' | 'P1' | 'P2' | 'P3' | '') ?? '',
-    ruleId: String(route.query.snapshot_ruleId ?? ''),
-    createdBy: String(route.query.snapshot_createdBy ?? ''),
-    q: String(route.query.snapshot_q ?? ''),
-    page: Number(route.query.snapshot_page ?? 1),
-    pageSize: Number(route.query.snapshot_pageSize ?? 10),
-    sort: String(route.query.snapshot_sort ?? 'createdAt:desc')
-  });
+const {
+  query: snapshotQuery,
+  loading: snapshotLoading,
+  error: snapshotError,
+  list: snapshotList,
+  total: snapshotTotal,
+  search: searchSnapshots
+} = useSnapshotsQuery({
+  createdStart: String(route.query.snapshot_start ?? ''),
+  createdEnd: String(route.query.snapshot_end ?? ''),
+  siteIds: String(route.query.snapshot_siteIds ?? '').split(',').filter(Boolean),
+  versionIds: String(route.query.snapshot_versionIds ?? '').split(',').filter(Boolean),
+  env: (route.query.snapshot_env as 'blue' | 'green' | '') ?? '',
+  severity: (route.query.snapshot_severity as 'P0' | 'P1' | 'P2' | 'P3' | '') ?? '',
+  ruleId: String(route.query.snapshot_ruleId ?? ''),
+  createdBy: String(route.query.snapshot_createdBy ?? ''),
+  q: String(route.query.snapshot_q ?? ''),
+  page: Number(route.query.snapshot_page ?? 1),
+  pageSize: Number(route.query.snapshot_pageSize ?? 10),
+  sort: String(route.query.snapshot_sort ?? 'createdAt:desc')
+});
 
 const applyEvents = async () => {
   await router.replace({
@@ -122,8 +144,7 @@ const applySnapshots = async () => {
   await searchSnapshots();
 };
 
-const onTabChange = async (tab: string | number) => {
-  activeTab.value = String(tab);
+const onTabChange = async () => {
   await router.replace({ query: { ...route.query, tab: activeTab.value } });
   if (activeTab.value === 'events') {
     await applyEvents();
@@ -133,7 +154,9 @@ const onTabChange = async (tab: string | number) => {
 };
 
 const goEventDetail = (id: string) => router.push({ path: `/events/${id}`, query: route.query });
-const openSnapshot = (id: string) => router.push({ path: `/events/snapshots/${id}`, query: { ...route.query, tab: 'snapshots', snapshotId: id } });
+
+const openSnapshot = (id: string) =>
+  router.push({ path: `/events/snapshots/${id}`, query: { ...route.query, tab: 'snapshots', snapshotId: id } });
 
 const downloadSnapshot = async (id: string, format: 'csv' | 'json') => {
   if (downloadingMap.value[id]) return;

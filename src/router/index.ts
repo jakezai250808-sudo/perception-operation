@@ -14,12 +14,12 @@ export const router = createRouter({
         {
           path: 'events/snapshots/:id',
           component: () => import('@/pages/events/SnapshotDetailPage.vue'),
-          meta: { activeMenu: '/events' }
+          meta: { activeMenu: '/events/snapshots' }
         },
         {
           path: 'events/:id',
           component: () => import('@/pages/event-detail/EventDetailPage.vue'),
-          meta: { activeMenu: '/events' }
+          meta: { activeMenu: '/events/list' }
         }
       ]
     },
