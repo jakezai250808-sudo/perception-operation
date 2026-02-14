@@ -1,0 +1,33 @@
+import { apiClient } from './client';
+import type { CompareResponse, DashboardSummary, EventsQuery, PagedEvents, Rule, Site, Version } from '@/types';
+
+export const getSites = async () => (await apiClient.get<Site[]>('/meta/sites')).data;
+export const getVersions = async () => (await apiClient.get<Version[]>('/meta/versions')).data;
+export const getRules = async () => (await apiClient.get<Rule[]>('/meta/rules')).data;
+
+export const getDashboardSummary = async (params: Record<string, string>) =>
+  (await apiClient.get<DashboardSummary>('/dashboard/summary', { params })).data;
+
+export const getCompareData = async (params: Record<string, string>) =>
+  (await apiClient.get<CompareResponse>('/compare', { params })).data;
+
+export const getEvents = async (params: Record<string, string | number>) =>
+  (await apiClient.get<PagedEvents>('/events', { params })).data;
+
+export const getEventDetail = async (id: string) => (await apiClient.get(`/events/${id}`)).data;
+
+export function buildEventsParams(query: EventsQuery): Record<string, string | number> {
+  return {
+    start: query.start ?? '',
+    end: query.end ?? '',
+    siteIds: query.siteIds?.join(',') ?? '',
+    versionIds: query.versionIds?.join(',') ?? '',
+    env: query.env ?? '',
+    severity: query.severity ?? '',
+    ruleId: query.ruleId ?? '',
+    q: query.q ?? '',
+    page: query.page ?? 1,
+    pageSize: query.pageSize ?? 20,
+    sort: query.sort ?? ''
+  };
+}

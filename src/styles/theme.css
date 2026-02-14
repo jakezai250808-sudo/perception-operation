@@ -1,0 +1,23 @@
+:root {
+  color-scheme: dark;
+  --bg: #111827;
+  --panel: #1f2937;
+  --text: #e5e7eb;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, "PingFang SC", sans-serif;
+}
+
+.page-container {
+  padding: 16px;
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 12px;
+}
