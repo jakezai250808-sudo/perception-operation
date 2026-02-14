@@ -298,7 +298,7 @@ export const handlers = {
     const query: SnapshotQuery = {
       createdStart: p.get('createdStart') ?? undefined,
       createdEnd: p.get('createdEnd') ?? undefined,
-      siteIds: toArr(p.get('siteIds') ?? undefined),
+      siteIds: toArr(p.get('site') ?? p.get('siteIds') ?? undefined),
       versionIds: toArr(p.get('versionIds') ?? undefined),
       env: (p.get('env') as SnapshotQuery['env']) ?? '',
       severity: (p.get('severity') as SnapshotQuery['severity']) ?? '',

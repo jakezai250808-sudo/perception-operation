@@ -112,6 +112,9 @@ export interface SnapshotRecord {
   filters: SnapshotFilters;
   summary: SnapshotSummary;
   status: SnapshotStatus;
+  result?: {
+    json?: unknown;
+  };
 }
 
 export interface SnapshotListResponse {

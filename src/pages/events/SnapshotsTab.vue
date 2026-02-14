@@ -41,6 +41,9 @@
       </el-table-column>
       <el-table-column label="eventCount" width="120"><template #default="{ row }">{{ row.summary.eventCount }}</template></el-table-column>
       <el-table-column label="anomalyScore" width="130"><template #default="{ row }">{{ row.summary.anomalyScore }}</template></el-table-column>
+      <el-table-column label="trigger描述" min-width="260">
+        <template #default="{ row }">{{ getTriggerDescription(row) }}</template>
+      </el-table-column>
       <el-table-column prop="status" label="status" width="120" />
       <el-table-column label="操作" width="280">
         <template #default="{ row }">
@@ -93,6 +96,20 @@ const createdRange = computed({
     props.query.createdEnd = v?.[1] ?? '';
   }
 });
+
+const getTriggerDescription = (row: SnapshotRecord) => {
+  const payload = row.result?.json;
+  let data: unknown = payload;
+  if (typeof payload === 'string') {
+    try {
+      data = JSON.parse(payload || '{}');
+    } catch {
+      data = {};
+    }
+  }
+  const trigger = (data as { trigger?: unknown } | undefined)?.trigger;
+  return typeof trigger === 'string' && trigger.trim() ? trigger : '-';
+};
 
 const reset = () => {
   const [start, end] = defaultDateRange();

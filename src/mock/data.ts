@@ -212,7 +212,12 @@ function generateSnapshots(): SnapshotRecord[] {
           value: Math.max(0, Math.floor(eventCount / 12 + random(idx * 17 + tIdx) * 80))
         }))
       },
-      status: statuses[idx % statuses.length]
+      status: statuses[idx % statuses.length],
+      result: {
+        json: {
+          trigger: `${topRules[0]?.ruleName ?? '未知规则'} 触发告警，影响 ${siteIds.length} 个局点，${env || 'all'} 环境需关注。`
+        }
+      }
     };
   });
 }

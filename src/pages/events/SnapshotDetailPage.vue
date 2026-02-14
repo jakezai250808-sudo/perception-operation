@@ -11,6 +11,7 @@
             <el-descriptions-item label="创建时间">{{ detail.createdAt }}</el-descriptions-item>
             <el-descriptions-item label="创建人">{{ detail.createdBy }}</el-descriptions-item>
             <el-descriptions-item label="时间范围">{{ detail.timeRangeStart }} ~ {{ detail.timeRangeEnd }}</el-descriptions-item>
+            <el-descriptions-item label="触发描述">{{ triggerDescription }}</el-descriptions-item>
             <el-descriptions-item label="说明">{{ detail.details.description }}</el-descriptions-item>
           </el-descriptions>
         </ChartCard>
@@ -86,6 +87,20 @@ const trendOption = computed(() =>
     [{ name: '事件数', data: detail.value?.summary.trend?.map((i) => i.value) ?? [] }]
   )
 );
+
+const triggerDescription = computed(() => {
+  const payload = detail.value?.result?.json;
+  let data: unknown = payload;
+  if (typeof payload === 'string') {
+    try {
+      data = JSON.parse(payload || '{}');
+    } catch {
+      data = {};
+    }
+  }
+  const trigger = (data as { trigger?: unknown } | undefined)?.trigger;
+  return typeof trigger === 'string' && trigger.trim() ? trigger : '-';
+});
 
 const openInEvents = () => {
   if (!detail.value) return;

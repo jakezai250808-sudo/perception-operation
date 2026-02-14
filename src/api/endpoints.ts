@@ -52,10 +52,13 @@ export function buildEventsParams(query: EventsQuery): Record<string, string | n
 }
 
 export function buildSnapshotParams(query: SnapshotQuery): Record<string, string | number> {
+  const joinedSites = query.siteIds?.join(',') ?? '';
   return {
     createdStart: query.createdStart ?? '',
     createdEnd: query.createdEnd ?? '',
-    siteIds: query.siteIds?.join(',') ?? '',
+    // 新后端约定使用 site 字段，保留 siteIds 兼容旧接口。
+    site: joinedSites,
+    siteIds: joinedSites,
     versionIds: query.versionIds?.join(',') ?? '',
     env: query.env ?? '',
     severity: query.severity ?? '',
