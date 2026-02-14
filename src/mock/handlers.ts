@@ -44,7 +44,7 @@ export const handlers = {
     const p = readParams(config);
     const siteId = p.get('siteId') ?? 'site-bj';
     const site = sites.find((s) => s.id === siteId);
-    return [200, { url: site?.map?.xodrUrl, polylines: sitePolylines[siteId] ?? [] }];
+    return [200, { url: site?.map?.xodrUrl, basemapUrl: site?.map?.basemapUrl, polylines: sitePolylines[siteId] ?? [] }];
   },
   '/api/events/geo': (config: AxiosRequestConfig) => {
     const p = readParams(config);

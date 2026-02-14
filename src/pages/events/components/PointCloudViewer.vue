@@ -6,7 +6,7 @@
       <template v-else>
         <el-space style="margin-bottom: 10px">
           <el-select v-model="selectedId" style="width: 280px" @change="loadPcd">
-            <el-option v-for="a in assets" :key="a.id" :value="a.id" :label="`${a.sensor || 'sensor'} · ${a.url}`" />
+            <el-option v-for="a in assets" :key="a.id" :value="a.id" :label="`${a.sensor || 'sensor'} · ${a.pointCount || 0}pts · ${a.fileSizeMb || 0}MB`" />
           </el-select>
           <el-slider v-model="pointSize" :min="0.1" :max="5" :step="0.1" style="width: 180px" @change="applyPointSize" />
           <el-button @click="downloadCurrent">下载原始PCD</el-button>

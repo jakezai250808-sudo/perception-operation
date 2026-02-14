@@ -13,7 +13,13 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { GeoEvent } from '@/types';
 
-const props = defineProps<{ polylines: Array<Array<[number, number]>>; events: GeoEvent[]; selectedId?: string; clusterOn: boolean }>();
+const props = defineProps<{
+  polylines: Array<Array<[number, number]>>;
+  basemapUrl?: string;
+  events: GeoEvent[];
+  selectedId?: string;
+  clusterOn: boolean;
+}>();
 const emit = defineEmits<{ select: [GeoEvent]; camera: [number, number, number] }>();
 
 const container = ref<HTMLDivElement | null>(null);
@@ -23,9 +29,31 @@ let renderer: THREE.WebGLRenderer;
 let controls: OrbitControls;
 let eventMeshes: THREE.Mesh[] = [];
 let mapObjects: THREE.Object3D[] = [];
+let basemapPlane: THREE.Mesh | null = null;
 let animation = 0;
 
 const severityColor: Record<string, number> = { P0: 0xff3b30, P1: 0xff9500, P2: 0xffcc00, P3: 0x32d7ff };
+
+const drawBasemap = () => {
+  if (!scene) return;
+  if (basemapPlane) {
+    scene.remove(basemapPlane);
+    basemapPlane.geometry.dispose();
+    (basemapPlane.material as THREE.Material).dispose();
+    basemapPlane = null;
+  }
+  if (!props.basemapUrl) return;
+
+  const loader = new THREE.TextureLoader();
+  loader.load(props.basemapUrl, (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.5 });
+    const geometry = new THREE.PlaneGeometry(1200, 800);
+    basemapPlane = new THREE.Mesh(geometry, material);
+    basemapPlane.position.set(0, 0, -1);
+    scene.add(basemapPlane);
+  });
+};
 
 const drawMap = () => {
   mapObjects.forEach((o) => scene.remove(o));
@@ -33,7 +61,7 @@ const drawMap = () => {
   props.polylines.forEach((line) => {
     const points = line.map(([x, y]) => new THREE.Vector3(x, y, 0));
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({ color: 0x7ea0ff, transparent: true, opacity: 0.55 });
+    const material = new THREE.LineBasicMaterial({ color: 0x7ea0ff, transparent: true, opacity: 0.75 });
     const mesh = new THREE.Line(geometry, material);
     scene.add(mesh);
     mapObjects.push(mesh);
@@ -46,9 +74,7 @@ function buildCluster(events: GeoEvent[]): GeoEvent[] {
   const m = new Map<string, GeoEvent>();
   events.forEach((e) => {
     const key = `${Math.floor(e.position.world.x / cell)}_${Math.floor(e.position.world.y / cell)}_${e.severity}`;
-    if (!m.has(key)) {
-      m.set(key, { ...e, message: `[cluster] ${e.message}` });
-    }
+    if (!m.has(key)) m.set(key, { ...e, message: `[cluster] ${e.message}` });
   });
   return [...m.values()];
 }
@@ -75,9 +101,7 @@ const onClick = (evt: MouseEvent) => {
   const ray = new THREE.Raycaster();
   ray.setFromCamera(mouse, camera);
   const hit = ray.intersectObjects(eventMeshes)[0];
-  if (hit?.object?.userData?.event) {
-    emit('select', hit.object.userData.event as GeoEvent);
-  }
+  if (hit?.object?.userData?.event) emit('select', hit.object.userData.event as GeoEvent);
 };
 
 onMounted(() => {
@@ -103,11 +127,14 @@ onMounted(() => {
     renderer.render(scene, camera);
     animation = requestAnimationFrame(run);
   };
+
+  drawBasemap();
   drawMap();
   drawEvents();
   run();
 });
 
+watch(() => props.basemapUrl, drawBasemap);
 watch(() => props.polylines, drawMap, { deep: true });
 watch(() => [props.events, props.clusterOn], drawEvents, { deep: true });
 watch(

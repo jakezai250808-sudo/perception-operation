@@ -143,6 +143,7 @@ export interface SnapshotQuery {
 
 export interface SiteMapMeta {
   xodrUrl: string;
+  basemapUrl?: string;
   bbox: { minX: number; maxX: number; minY: number; maxY: number };
 }
 
@@ -170,4 +171,6 @@ export interface PointCloudAsset {
   frameId?: string;
   sensor?: string;
   createdAt?: string;
+  pointCount?: number;
+  fileSizeMb?: number;
 }

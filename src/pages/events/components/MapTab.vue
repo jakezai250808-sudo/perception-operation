@@ -9,14 +9,14 @@
         <el-card class="panel">
           <template #header>
             <div style="display:flex;justify-content:space-between;align-items:center">
-              <span>局点地图</span>
+              <span>局点地图（支持配置替换底图）</span>
               <el-space>
                 <el-switch v-model="clusterOn" active-text="cluster" inactive-text="no cluster" />
                 <el-button text @click="listCollapsed = !listCollapsed">{{ listCollapsed ? '显示列表' : '隐藏列表' }}</el-button>
               </el-space>
             </div>
           </template>
-          <MapCanvas :polylines="polylines" :events="geoItems" :selected-id="selectedEvent?.id" :cluster-on="clusterOn" @select="selectEvent" @camera="onCamera" />
+          <MapCanvas :polylines="polylines" :basemap-url="basemapUrl" :events="geoItems" :selected-id="selectedEvent?.id" :cluster-on="clusterOn" @select="selectEvent" @camera="onCamera" />
         </el-card>
       </el-col>
     </el-row>
@@ -53,7 +53,7 @@ const meta = useMetaStore();
 
 const { query: mapQuery, toRouteQuery } = useMapQuery(route.query as Record<string, unknown>, meta.sites[0]?.id ?? 'site-bj');
 const { items: geoItems, load: loadGeo } = useGeoEvents();
-const { polylines, load: loadMap } = useXodrMap();
+const { polylines, basemapUrl, load: loadMap } = useXodrMap();
 
 const selectedEvent = ref<GeoEvent | null>(null);
 const pointCloudVisible = ref(false);

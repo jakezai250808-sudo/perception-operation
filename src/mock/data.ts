@@ -40,19 +40,19 @@ export const sites: Site[] = [
     id: 'site-bj',
     name: '北京局点',
     city: '北京',
-    map: { xodrUrl: '/maps/site-bj.xodr', bbox: { minX: -500, maxX: 500, minY: -300, maxY: 300 } }
+    map: { xodrUrl: '/maps/site-bj.xodr', basemapUrl: '/maps/mock-basemap.svg', bbox: { minX: -500, maxX: 500, minY: -300, maxY: 300 } }
   },
   {
     id: 'site-sh',
     name: '上海局点',
     city: '上海',
-    map: { xodrUrl: '/maps/site-sh.xodr', bbox: { minX: -500, maxX: 500, minY: -300, maxY: 300 } }
+    map: { xodrUrl: '/maps/site-sh.xodr', basemapUrl: '/maps/mock-basemap.svg', bbox: { minX: -500, maxX: 500, minY: -300, maxY: 300 } }
   },
   {
     id: 'site-sz',
     name: '深圳局点',
     city: '深圳',
-    map: { xodrUrl: '/maps/site-sz.xodr', bbox: { minX: -500, maxX: 500, minY: -300, maxY: 300 } }
+    map: { xodrUrl: '/maps/site-sz.xodr', basemapUrl: '/maps/mock-basemap.svg', bbox: { minX: -500, maxX: 500, minY: -300, maxY: 300 } }
   }
 ];
 
@@ -251,15 +251,27 @@ function generateGeoEvents(): GeoEvent[] {
 function generatePointCloudAssets(): Record<string, PointCloudAsset[]> {
   const map: Record<string, PointCloudAsset[]> = {};
   geoEvents.forEach((e, idx) => {
-    if (idx < 15) {
+    if (idx < 25) {
       map[e.id] = [
         {
-          id: `PCD-${e.id}`,
+          id: `PCD-${e.id}-A`,
           type: 'pcd',
           url: idx % 2 === 0 ? '/assets/pcd/sample-a.pcd' : '/assets/pcd/sample-b.pcd',
           frameId: `frame-${idx}`,
           sensor: idx % 2 === 0 ? 'lidar-top' : 'lidar-front',
-          createdAt: e.ts
+          createdAt: e.ts,
+          pointCount: 5000 + idx * 230,
+          fileSizeMb: Number((1.2 + idx * 0.08).toFixed(2))
+        },
+        {
+          id: `PCD-${e.id}-B`,
+          type: 'pcd',
+          url: idx % 2 === 0 ? '/assets/pcd/sample-b.pcd' : '/assets/pcd/sample-a.pcd',
+          frameId: `frame-${idx}-1`,
+          sensor: 'lidar-side',
+          createdAt: e.ts,
+          pointCount: 4200 + idx * 180,
+          fileSizeMb: Number((0.9 + idx * 0.05).toFixed(2))
         }
       ];
     } else {

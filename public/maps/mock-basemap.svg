@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f1b2f"/>
+      <stop offset="100%" stop-color="#12243d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <g opacity="0.25" stroke="#5b7db1" stroke-width="2" fill="none">
+    <path d="M80,140 C260,120 380,180 560,170 C760,160 900,130 1120,160"/>
+    <path d="M70,300 C280,270 430,320 640,310 C860,300 960,330 1130,360"/>
+    <path d="M60,520 C220,470 420,470 620,520 C790,560 940,560 1130,520"/>
+    <path d="M140,680 C260,620 420,610 600,640 C820,680 950,700 1090,680"/>
+  </g>
+  <g opacity="0.1" fill="#9cc3ff">
+    <circle cx="230" cy="200" r="28"/>
+    <circle cx="580" cy="520" r="34"/>
+    <circle cx="940" cy="260" r="22"/>
+  </g>
+  <text x="30" y="40" fill="#c8dcff" font-size="24" font-family="Arial">Mock Basemap (Site Demo)</text>
+</svg>
