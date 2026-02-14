@@ -1,0 +1,37 @@
+import { createRouter, createWebHistory } from 'vue-router';
+
+export const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      path: '/',
+      component: () => import('@/layout/AppLayout.vue'),
+      children: [
+        { path: '', redirect: '/dashboard' },
+        { path: 'dashboard', component: () => import('@/pages/dashboard/DashboardPage.vue') },
+        { path: 'compare', component: () => import('@/pages/compare/ComparePage.vue') },
+
+        { path: 'metadata/sites', component: () => import('@/pages/metadata/sites/SitesManagePage.vue') },
+        { path: 'metadata/events', component: () => import('@/pages/metadata/events/EventsManagePage.vue') },
+        { path: 'events', component: () => import('@/pages/events/EventsPage.vue') },
+        {
+          path: 'events/snapshots/:id',
+          component: () => import('@/pages/events/SnapshotDetailPage.vue'),
+          meta: { activeMenu: '/events/snapshots' }
+        },
+
+        {
+          path: 'events/:id/pointcloud',
+          component: () => import('@/pages/events/PointCloudPage.vue'),
+          meta: { activeMenu: '/events/map' }
+        },
+        {
+          path: 'events/:id',
+          component: () => import('@/pages/event-detail/EventDetailPage.vue'),
+          meta: { activeMenu: '/events/list' }
+        }
+      ]
+    },
+    { path: '/:pathMatch(.*)*', component: () => import('@/pages/NotFoundPage.vue') }
+  ]
+});
