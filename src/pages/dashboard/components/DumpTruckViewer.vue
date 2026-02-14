@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.viewer-shell { position: relative; height: 430px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(95,155,255,.35); background: radial-gradient(circle at 20% 18%, rgba(62,135,255,.22), rgba(5,11,24,.96)); }
+.viewer-shell { position: relative; height: 100%; min-height: 520px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(95,155,255,.35); background: radial-gradient(circle at 20% 18%, rgba(62,135,255,.22), rgba(5,11,24,.96)); }
 .canvas-host,.frames-host { width: 100%; height: 100%; }
 .frames-host { position: relative; cursor: ew-resize; user-select: none; }
 .frame-image { width: 100%; height: 100%; object-fit: cover; }

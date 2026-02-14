@@ -66,6 +66,19 @@
         <el-tag effect="dark" type="success">Step {{ selectedStep }} / 4</el-tag>
         <span class="step-title">{{ currentStepName }}</span>
         <span class="step-tip">{{ selectedStep >= 4 ? '已完成全部选配' : '可继续下一步选配' }}</span>
+        <div class="step-selected-inline">
+          <span class="selected-label">已选配置（Mock价格）</span>
+          <el-tag
+            v-for="item in selectedItems"
+            :key="item.id"
+            :type="item.type === 'lidar' ? 'danger' : item.type === 'radar' ? 'warning' : item.type === 'camera' ? 'primary' : 'success'"
+            size="small"
+            effect="dark"
+          >
+            {{ item.label }} ¥{{ item.price.toLocaleString() }}
+          </el-tag>
+          <span v-if="selectedItems.length === 0" class="selected-empty">未选择</span>
+        </div>
       </div>
 
       <el-steps :active="selectedStep" finish-status="success" align-center>
@@ -76,28 +89,7 @@
         <el-step title="冗余安全" description="双备份系统" />
       </el-steps>
 
-      <DumpTruckViewer :model-url="modelUrl" :active-types="activeOverlayTypes" />
-
-      <el-card class="config-summary-compact" shadow="never">
-        <template #header>
-          <div class="summary-head">
-            <span>已选配置（Mock 价格）</span>
-            <span class="summary-count">{{ selectedItems.length }} 项</span>
-          </div>
-        </template>
-        <el-empty v-if="selectedItems.length === 0" description="请点击“下一步选配”开始" :image-size="42" />
-        <div v-else class="chips-wrap compact">
-          <el-tag
-            v-for="item in selectedItems"
-            :key="item.id"
-            :type="item.type === 'lidar' ? 'danger' : item.type === 'radar' ? 'warning' : item.type === 'camera' ? 'primary' : 'success'"
-            size="small"
-            effect="dark"
-          >
-            {{ item.label }} ¥{{ item.price.toLocaleString() }}
-          </el-tag>
-        </div>
-      </el-card>
+      <div class="viewer-fill"><DumpTruckViewer :model-url="modelUrl" :active-types="activeOverlayTypes" /></div>
     </section>
   </div>
 </template>
@@ -239,6 +231,7 @@ const jumpToEvents = () => {
   flex-direction: column;
   gap: 14px;
   padding: 8px 2px;
+  min-height: calc(100vh - 180px);
 }
 
 .hero {
@@ -277,32 +270,31 @@ const jumpToEvents = () => {
   font-size: 13px;
 }
 
-.config-summary-compact {
-  --el-card-padding: 10px;
+
+.viewer-fill {
+  flex: 1;
+  min-height: 0;
 }
 
-.summary-head {
+.step-selected-inline {
+  margin-left: auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 13px;
-}
-
-.summary-count {
-  color: #83beff;
-  font-size: 12px;
-}
-
-.chips-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chips-wrap.compact {
   gap: 6px;
-  max-height: 52px;
-  overflow: auto;
+  max-width: 56%;
+  overflow: hidden;
+  flex-wrap: nowrap;
+}
+
+.selected-label {
+  font-size: 12px;
+  color: #9dc9ff;
+  white-space: nowrap;
+}
+
+.selected-empty {
+  font-size: 12px;
+  color: #6f8baa;
 }
 
 @media (max-width: 980px) {
@@ -312,6 +304,12 @@ const jumpToEvents = () => {
   }
 
   .step-row {
+    flex-wrap: wrap;
+  }
+
+  .step-selected-inline {
+    max-width: 100%;
+    margin-left: 0;
     flex-wrap: wrap;
   }
 }
