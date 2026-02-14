@@ -16,6 +16,9 @@ const dict = {
     eventsList: '事件列表',
     snapshots: '快照 Snapshots',
     map: '地图 Map',
+    metadata: '元数据管理',
+    metadataSites: '局点管理',
+    metadataEvents: '事件元数据',
     versions: '版本画像',
     rules: '规则字典'
   }
@@ -35,6 +38,16 @@ export const menuSchema: MenuItem[] = [
       { key: '/events/list', label: t('eventsList'), path: '/events?tab=events', roles: ['ops', 'admin'] },
       { key: '/events/snapshots', label: t('snapshots'), path: '/events?tab=snapshots', roles: ['ops', 'admin'] },
       { key: '/events/map', label: t('map'), path: '/events?tab=map', roles: ['ops', 'admin'] }
+    ]
+  },
+  {
+    key: '/metadata',
+    label: t('metadata'),
+    icon: '🛠️',
+    roles: ['ops', 'admin'],
+    children: [
+      { key: '/metadata/sites', label: t('metadataSites'), path: '/metadata/sites', roles: ['ops', 'admin'] },
+      { key: '/metadata/events', label: t('metadataEvents'), path: '/metadata/events', roles: ['ops', 'admin'] }
     ]
   },
   { key: '/versions', label: t('versions'), path: '/versions', icon: '🧬', roles: ['admin'], hidden: true },

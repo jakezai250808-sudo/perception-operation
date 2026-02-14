@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios';
 import AxiosMockAdapter from 'axios-mock-adapter';
-import { handlers } from './handlers';
+import { deleteHandlers, handlers, postHandlers, putHandlers } from './handlers';
 
 export function setupMock(client: AxiosInstance): void {
   const mock = new AxiosMockAdapter(client, { delayResponse: 300 });
@@ -22,7 +22,32 @@ export function setupMock(client: AxiosInstance): void {
       mock.onGet(/\/api\/snapshots\/SNAP-.+\/download.*/).reply((config) => handler(config));
       return;
     }
-
     mock.onGet(new RegExp(path.replace('/', '\\/'))).reply((config) => handler(config));
+  });
+
+  Object.entries(postHandlers).forEach(([path, handler]) => {
+    mock.onPost(new RegExp(path.replace('/', '\\/'))).reply((config) => handler(config));
+  });
+
+  Object.entries(putHandlers).forEach(([path, handler]) => {
+    if (path === '/api/metadata/sites/:id') {
+      mock.onPut(/\/api\/metadata\/sites\/.+/).reply((config) => handler(config));
+      return;
+    }
+    if (path === '/api/metadata/events/:id') {
+      mock.onPut(/\/api\/metadata\/events\/.+/).reply((config) => handler(config));
+      return;
+    }
+  });
+
+  Object.entries(deleteHandlers).forEach(([path, handler]) => {
+    if (path === '/api/metadata/sites/:id') {
+      mock.onDelete(/\/api\/metadata\/sites\/.+/).reply((config) => handler(config));
+      return;
+    }
+    if (path === '/api/metadata/events/:id') {
+      mock.onDelete(/\/api\/metadata\/events\/.+/).reply((config) => handler(config));
+      return;
+    }
   });
 }

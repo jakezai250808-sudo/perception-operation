@@ -10,6 +10,9 @@ export const router = createRouter({
         { path: '', redirect: '/dashboard' },
         { path: 'dashboard', component: () => import('@/pages/dashboard/DashboardPage.vue') },
         { path: 'compare', component: () => import('@/pages/compare/ComparePage.vue') },
+
+        { path: 'metadata/sites', component: () => import('@/pages/metadata/sites/SitesManagePage.vue') },
+        { path: 'metadata/events', component: () => import('@/pages/metadata/events/EventsManagePage.vue') },
         { path: 'events', component: () => import('@/pages/events/EventsPage.vue') },
         {
           path: 'events/snapshots/:id',

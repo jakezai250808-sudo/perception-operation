@@ -297,3 +297,37 @@ export function getSnapshotEvents(id: string): EventRecord[] {
   if (!snap) return [];
   return filterBySnapshot(allEvents, snap.filters);
 }
+
+
+export const manageSites = sites.map((s) => ({ id: s.id, name: s.name, city: s.city }));
+export const manageRules = rules.map((r) => ({ id: r.id, name: r.name, type: r.type, severity: r.severity }));
+
+export function upsertManageSite(id: string | null, payload: { id: string; name: string; city: string }) {
+  if (id) {
+    const idx = manageSites.findIndex((i) => i.id === id);
+    if (idx >= 0) manageSites[idx] = payload;
+    return payload;
+  }
+  manageSites.unshift(payload);
+  return payload;
+}
+
+export function removeManageSite(id: string) {
+  const idx = manageSites.findIndex((i) => i.id === id);
+  if (idx >= 0) manageSites.splice(idx, 1);
+}
+
+export function upsertManageRule(id: string | null, payload: { id: string; name: string; type: 'trigger' | 'alarm'; severity: Severity }) {
+  if (id) {
+    const idx = manageRules.findIndex((i) => i.id === id);
+    if (idx >= 0) manageRules[idx] = payload;
+    return payload;
+  }
+  manageRules.unshift(payload);
+  return payload;
+}
+
+export function removeManageRule(id: string) {
+  const idx = manageRules.findIndex((i) => i.id === id);
+  if (idx >= 0) manageRules.splice(idx, 1);
+}

@@ -8,10 +8,16 @@ import {
   getSnapshotDetail,
   getSnapshotEvents,
   pointCloudByEventId,
+  manageRules,
+  manageSites,
+  removeManageRule,
+  removeManageSite,
   rules,
   sitePolylines,
   sites,
   snapshots,
+  upsertManageRule,
+  upsertManageSite,
   versions
 } from './data';
 
@@ -40,6 +46,8 @@ export const handlers = {
   '/api/meta/sites': () => [200, sites],
   '/api/meta/versions': () => [200, versions],
   '/api/meta/rules': () => [200, rules],
+  '/api/metadata/sites': () => [200, manageSites],
+  '/api/metadata/events': () => [200, manageRules],
   '/api/maps/xodr': (config: AxiosRequestConfig) => {
     const p = readParams(config);
     const siteId = p.get('siteId') ?? 'site-bj';
@@ -345,5 +353,43 @@ export const handlers = {
     const header = ['id', 'timestamp', 'siteName', 'env', 'versionLabel', 'ruleId', 'ruleName', 'severity', 'count', 'sourceModule', 'message'].join(',');
     const rows = events.map((e) => [e.id, e.timestamp, e.siteName, e.env, e.versionLabel, e.ruleId, e.ruleName, e.severity, e.count, e.sourceModule, JSON.stringify(e.message)].join(','));
     return [200, [header, ...rows].join('\n'), { 'Content-Type': 'text/csv;charset=utf-8' }];
+  }
+};
+
+
+export const postHandlers = {
+  '/api/metadata/sites': (config: AxiosRequestConfig) => {
+    const payload = JSON.parse(String(config.data || '{}'));
+    return [200, upsertManageSite(null, payload)];
+  },
+  '/api/metadata/events': (config: AxiosRequestConfig) => {
+    const payload = JSON.parse(String(config.data || '{}'));
+    return [200, upsertManageRule(null, payload)];
+  }
+};
+
+export const putHandlers = {
+  '/api/metadata/sites/:id': (config: AxiosRequestConfig) => {
+    const id = config.url?.split('/').pop() ?? '';
+    const payload = JSON.parse(String(config.data || '{}'));
+    return [200, upsertManageSite(id, payload)];
+  },
+  '/api/metadata/events/:id': (config: AxiosRequestConfig) => {
+    const id = config.url?.split('/').pop() ?? '';
+    const payload = JSON.parse(String(config.data || '{}'));
+    return [200, upsertManageRule(id, payload)];
+  }
+};
+
+export const deleteHandlers = {
+  '/api/metadata/sites/:id': (config: AxiosRequestConfig) => {
+    const id = config.url?.split('/').pop() ?? '';
+    removeManageSite(id);
+    return [200, { ok: true }];
+  },
+  '/api/metadata/events/:id': (config: AxiosRequestConfig) => {
+    const id = config.url?.split('/').pop() ?? '';
+    removeManageRule(id);
+    return [200, { ok: true }];
   }
 };
