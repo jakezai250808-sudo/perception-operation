@@ -15,6 +15,19 @@ npm run build
 ```
 
 
+## 依赖安装（Codex/容器环境排障）
+若直接 `npm install` 在容器中出现 403/代理问题，可使用：
+
+```bash
+npm run install:deps
+```
+
+该脚本会自动：
+1. 先用当前环境变量安装；
+2. 失败后自动尝试“去代理变量”重试；
+3. 输出下一步排障建议（registry / proxy auth）。
+
+
 ## 后端系统地址配置
 支持两种方式：
 
