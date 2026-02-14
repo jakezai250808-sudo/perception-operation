@@ -38,7 +38,9 @@ const collapsed = computed(() => app.sidebarCollapsed);
 const activeKey = computed(() => {
   if (route.meta.activeMenu) return String(route.meta.activeMenu);
   if (route.path === '/events') {
-    return route.query.tab === 'snapshots' ? '/events/snapshots' : '/events/list';
+    if (route.query.tab === 'snapshots') return '/events/snapshots';
+    if (route.query.tab === 'map') return '/events/map';
+    return '/events/list';
   }
   return route.path;
 });

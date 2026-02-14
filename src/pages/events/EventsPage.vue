@@ -1,55 +1,38 @@
 <template>
   <div class="page-container">
-    <el-card class="panel" style="margin-bottom: 12px">
-      <div style="display: flex; justify-content: space-between; align-items: center">
-        <div>
-          <strong>事件中心</strong>
-          <span style="margin-left: 8px; color: var(--text-secondary)">
-            {{ activeTab === 'snapshots' ? '当前：快照视图' : activeTab === 'map' ? '当前：地图视图' : '当前：事件列表' }}
-          </span>
-        </div>
-        <el-segmented
-          v-model="activeTab"
-          :options="[
-            { label: '事件列表', value: 'events' },
-            { label: '快照', value: 'snapshots' },
-            { label: '地图', value: 'map' }
-          ]"
-          @change="onTabChange"
+    <el-tabs v-model="activeTab" @tab-change="onTabChange">
+      <el-tab-pane label="事件列表" name="events">
+        <EventsListTab
+          :query="eventQuery"
+          :meta="{ rules: meta.rules }"
+          :list="eventList"
+          :loading="eventLoading"
+          :error="eventError"
+          :total="eventTotal"
+          @apply="applyEvents"
+          @go-detail="goEventDetail"
         />
-      </div>
-    </el-card>
+      </el-tab-pane>
 
-    <EventsListTab
-      v-if="activeTab === 'events'"
-      :query="eventQuery"
-      :meta="{ rules: meta.rules }"
-      :list="eventList"
-      :loading="eventLoading"
-      :error="eventError"
-      :total="eventTotal"
-      @apply="applyEvents"
-      @go-detail="goEventDetail"
-    />
+      <el-tab-pane label="快照 Snapshots" name="snapshots">
+        <SnapshotsTab
+          :query="snapshotQuery"
+          :list="snapshotList"
+          :loading="snapshotLoading"
+          :error="snapshotError"
+          :total="snapshotTotal"
+          :meta="{ sites: meta.sites, versions: meta.versions, rules: meta.rules }"
+          :downloading-map="downloadingMap"
+          @apply="applySnapshots"
+          @view="openSnapshot"
+          @download="downloadSnapshot"
+        />
+      </el-tab-pane>
 
-    <SnapshotsTab
-      v-else-if="activeTab === 'snapshots'"
-      :query="snapshotQuery"
-      :list="snapshotList"
-      :loading="snapshotLoading"
-      :error="snapshotError"
-      :total="snapshotTotal"
-      :meta="{ sites: meta.sites, versions: meta.versions, rules: meta.rules }"
-      :downloading-map="downloadingMap"
-      @apply="applySnapshots"
-      @view="openSnapshot"
-      @download="downloadSnapshot"
-    />
-
-    <MapTab
-      v-else
-    />
-
+      <el-tab-pane label="地图 Map" name="map">
+        <MapTab />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 

@@ -20,7 +20,7 @@ export const router = createRouter({
         {
           path: 'events/:id/pointcloud',
           component: () => import('@/pages/events/PointCloudPage.vue'),
-          meta: { activeMenu: '/events/list' }
+          meta: { activeMenu: '/events/map' }
         },
         {
           path: 'events/:id',
