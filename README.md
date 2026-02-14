@@ -14,6 +14,24 @@ npm run lint
 npm run build
 ```
 
+
+## 后端系统地址配置
+支持两种方式：
+
+1) **直接配置完整 API 地址**（兼容旧方式）
+```env
+VITE_API_BASE_URL=/api
+# 或
+VITE_API_BASE_URL=http://10.0.0.8:8080/api
+```
+
+2) **配置后端系统地址 + API 前缀**（推荐）
+```env
+VITE_BACKEND_BASE_URL=http://10.0.0.8:8080
+VITE_API_BASE_PATH=/api
+```
+最终请求地址会拼接为：`VITE_BACKEND_BASE_URL + VITE_API_BASE_PATH`。
+
 ## 技术栈
 - Vue 3 + Vite + TypeScript(strict)
 - Vue Router / Pinia
